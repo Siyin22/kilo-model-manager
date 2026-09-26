@@ -1,0 +1,30 @@
+:root { color-scheme: light dark; }
+body { margin: 0; padding: 20px 24px; box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: var(--vscode-foreground); background: var(--vscode-editor-background); font-family: var(--vscode-font-family); font-size: 13px; }
+header { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+h1 { font-size: 23px; margin: 0 0 8px; } h2 { margin-top: 0; font-size: 19px; } h3 { font-size: 15px; }
+p { line-height: 1.6; } .muted, header p { color: var(--vscode-descriptionForeground); }
+.layout { display: grid; grid-template-columns: clamp(310px, 30vw, 480px) minmax(0,1fr); gap: 24px; margin-top: 18px; flex: 1; min-height: 0; }
+header, #file, #status { flex-shrink: 0; }
+header p { margin: 4px 0; }
+aside { border-right: 1px solid var(--vscode-panel-border); padding-right: 18px; display: flex; flex-direction: column; min-height: 0; }
+aside > label, aside > input, aside > select, aside > button { flex-shrink: 0; }
+main { min-width: 0; min-height: 0; overflow: auto; padding: 0 10px 24px 2px; scrollbar-gutter: stable; }
+label { display: block; margin: 10px 0 6px; } input:not([type=checkbox]),select,textarea { width: 100%; box-sizing: border-box; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); border-radius: 4px; padding: 9px; margin-top: 6px; }
+textarea, pre { font-family: var(--vscode-editor-font-family, monospace); font-size: 12px; line-height: 1.6; } textarea { resize: vertical; }
+input:read-only { opacity: .65; } button { border: 1px solid transparent; border-radius: 4px; padding: 8px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); cursor: pointer; }
+button:hover { background: var(--vscode-button-hoverBackground); } button:disabled { opacity: .5; cursor: wait; }
+button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
+button.danger { background: transparent; border-color: var(--vscode-errorForeground); color: var(--vscode-errorForeground); }
+.actions,.checks { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; } .checks label { display: flex; align-items: center; gap: 5px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } section { margin: 24px 0; padding-top: 10px; border-top: 1px solid var(--vscode-panel-border); }
+#add { width: 100%; margin: 12px 0; }
+#list { flex: 1; min-height: 0; overflow: auto; padding: 2px 5px 12px 2px; scrollbar-gutter: stable; }
+.model { display: block; text-align: left; width: 100%; margin: 3px 0; padding: 10px 12px; border-left: 3px solid transparent; background: transparent; color: var(--vscode-foreground); overflow-wrap: anywhere; line-height: 1.45; }
+.model small { display: block; margin-top: 4px; color: var(--vscode-descriptionForeground); }
+button.model:hover { background: color-mix(in srgb, var(--vscode-foreground) 6%, var(--vscode-editor-background)); color: var(--vscode-foreground); }
+button.model.selected, button.model.selected:hover { background: color-mix(in srgb, var(--vscode-foreground) 10%, var(--vscode-editor-background)); color: var(--vscode-foreground); border-left-color: var(--vscode-focusBorder); }
+.model.selected small { color: var(--vscode-foreground); opacity: .8; }
+#status { padding: 10px 12px; border-left: 3px solid var(--vscode-focusBorder); background: var(--vscode-textBlockQuote-background); overflow-wrap: anywhere; } #status.error { border-color: var(--vscode-errorForeground); }
+.hint { color: var(--vscode-descriptionForeground); padding-left: 10px; border-left: 2px solid var(--vscode-panel-border); } pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--vscode-textCodeBlock-background); padding: 14px; }
+:focus-visible { outline: 2px solid var(--vscode-focusBorder); outline-offset: 2px; }
+@media (max-width:850px) { body { padding: 14px; height: auto; min-height: 100vh; display: block; overflow: auto; } header { display: block; } header .actions { margin-top: 12px; } .layout { grid-template-columns: 1fr; } aside { border-right: none; padding: 0; } #list { flex: none; height: 40vh; min-height: 240px; } main { overflow: visible; padding: 0; } .grid { grid-template-columns: 1fr; } }

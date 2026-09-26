@@ -1,0 +1,5 @@
+test/**
+node_modules/@vscode/vsce/**
+*.vsix
+package-lock.json
+.git/**

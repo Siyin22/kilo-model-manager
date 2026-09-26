@@ -1,0 +1,49 @@
+{
+  "name": "kilo-model-manager-local",
+  "displayName": "Kilo 模型与推理设置",
+  "description": "独立管理 Kilo 自定义模型、图片能力及推理档位，支持预览、备份和恢复。",
+  "version": "0.1.2",
+  "publisher": "local-tools",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onCommand:kiloModelManager.open"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "kiloModelManager.open",
+        "title": "Kilo 模型与推理设置",
+        "icon": "$(settings-gear)"
+      }
+    ],
+    "configuration": {
+      "title": "Kilo 模型与推理设置",
+      "properties": {
+        "kiloModelManager.configPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Kilo 全局 JSON/JSONC 配置绝对路径。留空时检测 ~/.config/kilo/kilo.jsonc 或 kilo.json。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "package": "vsce package --allow-missing-repository --skip-license"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.6.2",
+    "jsdom": "^29.1.1"
+  },
+  "license": "MIT"
+}
