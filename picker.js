@@ -3,10 +3,10 @@ const vscode = require('vscode');
 const patcher = require('./patcher');
 function activate(context) {
   if (vscode.extensions.getExtension('local-tools.kilo-picker-helper')) {
-    vscode.window.showWarningMessage('Kilo 模型工具箱已整合分组助手。请卸载或禁用旧版 Kilo 模型分组助手并重新加载窗口，以启用工具箱的分组与保存修复功能。');
+    vscode.window.showWarningMessage('Kilo模型工具箱已整合分组助手。请卸载或禁用旧版 Kilo 模型分组助手并重新加载窗口，以启用工具箱的分组与保存修复功能。');
     return;
   }
-  const output = vscode.window.createOutputChannel('Kilo 模型工具箱');
+  const output = vscode.window.createOutputChannel('Kilo模型工具箱');
   context.subscriptions.push(output);
   const storage = context.globalStorageUri.fsPath;
   let queue = Promise.resolve();
@@ -37,7 +37,7 @@ function activate(context) {
       } else if (!quiet) vscode.window.showInformationMessage(message + '，文件无需变更。');
     } catch (error) {
       output.appendLine(error.stack || String(error));
-      vscode.window.showWarningMessage('Kilo 模型工具箱：' + error.message);
+      vscode.window.showWarningMessage('Kilo模型工具箱：' + error.message);
     } finally { restoring = false; }
   }
   function schedule(restore, quiet) {

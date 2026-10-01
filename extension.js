@@ -18,7 +18,7 @@ function activate(context) {
       vscode.window.showErrorMessage('未找到 Kilo 配置。请在设置 kiloModelManager.configPath 中填写配置文件的绝对路径。');
       return;
     }
-    panel = vscode.window.createWebviewPanel('kiloModelManager', 'Kilo 模型与推理设置', vscode.ViewColumn.One, {
+    panel = vscode.window.createWebviewPanel('kiloModelManager', 'Kilo模型工具箱', vscode.ViewColumn.One, {
       enableScripts: true, retainContextWhenHidden: true,
       localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'media')]
     });
@@ -114,10 +114,10 @@ function html(webview, uri) {
   return `<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
-  <link rel="stylesheet" href="${css}"><title>Kilo 模型与推理设置</title></head><body>
-  <header><div><h1>Kilo 模型工具箱</h1><p>管理自定义模型、推理选项与模型分组</p></div><div class="actions"><button id="pickerSettings" class="secondary">分组与保存修复</button><button id="refresh" class="secondary">刷新</button><button id="restore" class="secondary">恢复配置备份</button><button id="reload" class="secondary">重新加载窗口</button></div></header>
+  <link rel="stylesheet" href="${css}"><title>Kilo模型工具箱</title></head><body>
+  <header><div><h1>Kilo模型工具箱</h1><p>管理自定义模型、推理选项与模型分组</p></div><div class="actions"><button id="pickerSettings" class="secondary">分组与保存修复</button><button id="refresh" class="secondary">刷新</button><button id="restore" class="secondary">恢复配置备份</button><button id="reload" class="secondary">重新加载窗口</button></div></header>
   <p id="file" class="muted"></p><div id="status" role="status" aria-live="polite">正在读取配置…</div>
-  <div class="layout"><aside><label for="provider">供应商</label><select id="provider"></select><div class="actions"><button id="addProvider" class="secondary">＋ 添加供应商</button><button id="editProvider" class="secondary">编辑供应商</button><button id="fetchModels" class="secondary">读取供应商模型</button></div><label for="search">查找模型</label><input id="search" placeholder="输入 ID 或名称"><button id="add">＋ 添加模型</button><div id="list"></div></aside>
+  <div class="layout"><aside><label for="provider">供应商</label><select id="provider"></select><div class="actions provider-actions" role="group" aria-label="供应商操作"><button id="addProvider" class="secondary" title="添加供应商" aria-label="添加供应商">＋ 添加</button><button id="editProvider" class="secondary" title="编辑供应商" aria-label="编辑供应商">编辑</button><button id="fetchModels" class="secondary" title="读取供应商模型" aria-label="读取供应商模型">读取模型</button></div><label for="search">查找模型</label><input id="search" placeholder="输入 ID 或名称"><button id="add">＋ 添加模型</button><div id="list"></div></aside>
   <main><div id="empty">请选择模型，或添加供应商后读取模型列表。</div>
   <form id="providerForm" hidden><h2 id="providerHeading">添加供应商</h2><div class="grid"><label>供应商 ID<input id="providerId" required pattern="[a-z0-9]+([-_][a-z0-9]+)*" maxlength="100" placeholder="my-provider"></label><label>显示名称<input id="providerName" required></label></div><label>API 协议<select id="providerProtocol"><option value="@ai-sdk/openai-compatible">OpenAI 兼容</option><option value="@ai-sdk/openai">OpenAI</option><option value="@ai-sdk/anthropic">Anthropic</option></select></label><label>API 地址<input id="providerURL" type="url" required placeholder="https://api.example.com/v1"></label><label>API Key<input id="providerKey" type="password" autocomplete="new-password" placeholder="编辑时留空保留原凭据，也可使用 {env:变量名}"></label><p class="muted">API Key 保存在本地 Kilo 配置中，已有密钥不会显示在页面。地址应包含供应商要求的版本路径。</p><div class="actions"><button type="submit">保存供应商</button><button type="button" id="cancelProvider" class="secondary">取消</button></div></form>
   <section id="catalogPanel" hidden><h2>供应商模型列表</h2><p class="muted">勾选后导入；已有模型不会被覆盖。列表接口通常不提供准确的推理和图片能力，导入后请单独设置。</p><input id="catalogSearch" placeholder="搜索模型 ID 或名称"><div class="actions"><button id="selectCatalog" type="button" class="secondary">全选搜索结果</button><button id="clearCatalog" type="button" class="secondary">清空选择</button><span id="catalogCount"></span></div><div id="catalogList"></div><div class="actions"><button id="importModels" type="button">导入所选模型</button><button id="closeCatalog" type="button" class="secondary">取消</button></div></section>

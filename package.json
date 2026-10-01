@@ -1,8 +1,8 @@
 {
   "name": "kilo-model-manager-local",
-  "displayName": "Kilo 模型工具箱",
+  "displayName": "Kilo模型工具箱",
   "description": "统一管理 Kilo 模型、推理档位、模型分组和原生保存修复，支持备份与恢复。",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "local-tools",
   "engines": {
     "vscode": "^1.90.0"
@@ -19,7 +19,7 @@
     "commands": [
       {
         "command": "kiloModelManager.open",
-        "title": "Kilo 模型与推理设置",
+        "title": "Kilo模型工具箱",
         "icon": "$(settings-gear)"
       },
       {
@@ -40,7 +40,7 @@
       }
     ],
     "configuration": {
-      "title": "Kilo 模型工具箱",
+      "title": "Kilo模型工具箱",
       "properties": {
         "kiloModelManager.configPath": {
           "type": "string",
