@@ -53,6 +53,20 @@ test('legacy Python patch adoption', () => fixture((extension, storage) => {
   for (const name of names) assert.equal(fs.readFileSync(path.join(extension, 'dist', name), 'utf8'), originals[name]);
 }));
 
+test('upgrades the 0.2.0 save fix and keeps native default selectable with zero variants', () => fixture((extension, storage) => {
+  const options={hideGateway:true,disableMostUsed:true,fixNativeSave:true};
+  patcher.apply(extension,storage,{...options,legacyNativeSave:true});
+  assert.equal(patcher.apply(extension,storage,options).changed,true);
+  for(const file of patcher.inspect(extension,storage).files) {
+    assert.ok(file.current.includes('/* local: keep native default choice */'));
+    const expression=file.current.match(/\/\* local: keep native default choice \*\/([^,;]+\?\[void 0,\.\.\.e\.variants\]:e\.variants)/)[1];
+    const choose=vm.runInNewContext('(e)=>'+expression);
+    assert.deepEqual(Array.from(choose({variants:[],allowClear:true})),[undefined]);
+    assert.deepEqual(Array.from(choose({variants:['关闭'],allowClear:true})),[undefined,'关闭']);
+    assert.deepEqual(Array.from(choose({variants:['low','high'],allowClear:true})),[undefined,'low','high']);
+  }
+}));
+
 test('upgrade from grouping-only patch preserves options and can fully restore', () => fixture((extension, storage) => {
   patcher.apply(extension, storage, {hideGateway: true, disableMostUsed: true});
   assert.equal(patcher.apply(extension, storage, {hideGateway: true, disableMostUsed: true, fixNativeSave: true}).changed, true);

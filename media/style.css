@@ -27,4 +27,8 @@ button.model.selected, button.model.selected:hover { background: color-mix(in sr
 #status { padding: 10px 12px; border-left: 3px solid var(--vscode-focusBorder); background: var(--vscode-textBlockQuote-background); overflow-wrap: anywhere; } #status.error { border-color: var(--vscode-errorForeground); }
 .hint { color: var(--vscode-descriptionForeground); padding-left: 10px; border-left: 2px solid var(--vscode-panel-border); } pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--vscode-textCodeBlock-background); padding: 14px; }
 :focus-visible { outline: 2px solid var(--vscode-focusBorder); outline-offset: 2px; }
+[hidden] { display: none !important; }
+aside > .actions { flex-shrink: 0; margin-top: 10px; }
+#catalogList { max-height: 50vh; overflow: auto; margin: 16px 0; }
+#catalogList label { overflow-wrap: anywhere; padding: 7px; margin: 0; }
 @media (max-width:850px) { body { padding: 14px; height: auto; min-height: 100vh; display: block; overflow: auto; } header { display: block; } header .actions { margin-top: 12px; } .layout { grid-template-columns: 1fr; } aside { border-right: none; padding: 0; } #list { flex: none; height: 40vh; min-height: 240px; } main { overflow: visible; padding: 0; } .grid { grid-template-columns: 1fr; } }

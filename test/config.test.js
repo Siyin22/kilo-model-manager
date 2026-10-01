@@ -60,3 +60,41 @@ test('commit backs up exact original, restore and concurrent edits are safe', ()
     assert.equal(fs.readFileSync(file,'utf8'),source);
   } finally { fs.rmSync(dir,{recursive:true,force:true}); }
 });
+
+test('switch mode stores enabled defaults and only a disabled-thinking variant; graded mode clears switch controls', () => {
+  const data = c.parse(source);
+  data.provider.local.models.old.options = {temperature:0.4, thinking:{type:'adaptive'}};
+  const switchCommand = {...cmd, reasoningMode:'switch', defaultOptions:{thinking:{type:'enabled'}}, variants:{'关闭':{thinking:{type:'disabled'}}}};
+  const saved = c.update(JSON.stringify(data),switchCommand);
+  const model=c.parse(saved).provider.local.models.old;
+  assert.deepEqual(model.options,{temperature:0.4,thinking:{type:'enabled'}});
+  assert.deepEqual(Object.keys(model.variants).filter(key=>!model.variants[key].disabled),['关闭']);
+  assert.deepEqual(model.variants['关闭'],{thinking:{type:'disabled'}});
+  const graded=c.parse(c.update(saved,{...cmd,reasoningMode:'graded',defaultOptions:{}})).provider.local.models.old;
+  assert.deepEqual(graded.options,{temperature:0.4}); assert.equal(graded.variants['关闭'].disabled,true);
+  assert.throws(()=>c.update(saved,{...switchCommand,defaultOptions:{}}),/开启参数/);
+});
+
+test('provider creation/edit preserves JSONC, credentials on blank input, existing models and other fields', () => {
+  const provider={action:'add',id:'example',name:'Example',npm:'@ai-sdk/openai-compatible',baseURL:'https://example.com/v1/',apiKey:'TEST-KEY'};
+  let text=c.updateProvider(source,provider);
+  assert.ok(text.includes('// keep provider comment'));
+  assert.deepEqual(c.parse(text).provider.example.models,{});
+  assert.equal(c.parse(text).provider.example.options.baseURL,'https://example.com/v1');
+  text=c.importModels(text,'example',[{id:'org/model',name:'Model'}]);
+  text=c.updateProvider(text,{...provider,action:'edit',name:'Updated',apiKey:''});
+  assert.equal(c.parse(text).provider.example.options.apiKey,'TEST-KEY');
+  assert.equal(c.parse(text).provider.example.models['org/model'].name,'Model');
+  assert.ok(!JSON.stringify(c.safeModels(c.parse(text))).includes('TEST-KEY'));
+  assert.throws(()=>c.updateProvider(text,provider),/已存在/);
+  assert.throws(()=>c.updateProvider('{}',{...provider,id:'__proto__'}),/ID/);
+  assert.throws(()=>c.updateProvider('{}',{...provider,baseURL:'https://key:secret@example.com/v1'}),/地址/);
+});
+
+test('model import does not overwrite existing capabilities and supports a provider without models', () => {
+  const next=c.importModels(source,'local',[{id:'old',name:'Overwrite'},{id:'new',name:'New'}]);
+  assert.deepEqual(c.parse(next).provider.local.models.old,c.parse(source).provider.local.models.old);
+  assert.deepEqual(c.parse(next).provider.local.models.new,{name:'New'});
+  assert.equal(c.parse(c.importModels('{"provider":{"empty":{}}}','empty',[{id:'first'}])).provider.empty.models.first.name,'first');
+  assert.equal(c.safeModels({provider:{empty:{}}})[0].models.length,0);
+});

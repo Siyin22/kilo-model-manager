@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const files = ['webview.js', 'agent-manager.js'];
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
 const signatures = require('./signatures.json');
-function fixNativeSave(source) {
+function fixNativeSave(source, legacy = false) {
   // Anchor to provider actions: the Anaconda bridge has an identical send function.
   const anchor = 'o.type==="providerActionError"&&s.onError?.(o)}});';
   const send = 'function r(o,s={}){let l=crypto.randomUUID();return t.set(l,s),e.postMessage({...o,requestId:l}),l}';
@@ -17,7 +17,13 @@ function fixNativeSave(source) {
     't.set(l,s);try{e.postMessage(JSON.parse(JSON.stringify({...o,requestId:l})))}' +
     'catch(error){t.delete(l);s.onError?.({type:"providerActionError",requestId:l,providerID:o.providerID,action:"connect",message:error instanceof Error?error.message:String(error)})}' +
     'return l}return t.set(l,s),e.postMessage({...o,requestId:l}),l}';
-  return source.replace(original, anchor + replacement);
+  let result = source.replace(original, anchor + replacement);
+  if (!legacy) {
+    const empty = 'e.variants.length===0&&!e.value?[]:e.allowClear?[void 0,...e.variants]:e.variants';
+    if (result.split(empty).length !== 2) throw Error('默认推理选项结构不兼容。');
+    result = result.replace(empty, '/* local: keep native default choice */e.allowClear?[void 0,...e.variants]:e.variants');
+  }
+  return result;
 }
 function transform(source, options) {
   const start = source.indexOf('="most-used"');
@@ -37,16 +43,16 @@ function transform(source, options) {
   if (used.length !== 1) throw Error('最常用分组结构不兼容。');
   if (options.disableMostUsed) section = section.replace(used[0][0], '/* local: keep most-used list empty */');
   let result = source.slice(0, start) + section + source.slice(end);
-  if (options.fixNativeSave) result = fixNativeSave(result);
+  if (options.fixNativeSave) result = fixNativeSave(result, options.legacyNativeSave);
   new vm.Script(result); // Parse without running extension code.
   return result;
 }
-function variants(original) {
-  return [false, true].flatMap(hideGateway => [false, true].flatMap(disableMostUsed =>
-    [false, true].map(fixNativeSave => ({
-      options: {hideGateway, disableMostUsed, fixNativeSave},
-      content: transform(original, {hideGateway, disableMostUsed, fixNativeSave})
-    }))));
+function* variants(original) {
+  for (const hideGateway of [false, true]) for (const disableMostUsed of [false, true]) for (const fixNativeSave of [false, true]) {
+    const options = {hideGateway, disableMostUsed, fixNativeSave};
+    yield {options, content: transform(original, options)};
+    if (fixNativeSave) yield {options, content: transform(original, {...options, legacyNativeSave: true})};
+  }
 }
 function inspect(extension, storage) {
   const version = JSON.parse(fs.readFileSync(path.join(extension, 'package.json'), 'utf8')).version;
@@ -68,7 +74,8 @@ function inspect(extension, storage) {
       if (hash(data) === signatures[version][name]) { original = data; break; }
     }
     if (!original) throw Error(`${name} 找不到经过验证的原版文件，未修改。`);
-    const known = variants(original).find(v => v.content === current);
+    let known;
+    for (const variant of variants(original)) if (variant.content === current) { known = variant; break; }
     if (!known) throw Error(`${name} 含有其他修改，已停止以避免覆盖。`);
     return {name, target, backup, current, original, options: known.options};
   });
