@@ -1,7 +1,7 @@
 'use strict';
 const vscode = acquireVsCodeApi();
 const $ = id => document.getElementById(id);
-const levels = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'];
+const levels = ['minimal', 'low', 'medium', 'high', 'xhigh', 'max'];
 let providers = [], current = null, adding = false, revision = '', dirty = false, pending = false;
 const provider = () => providers.find(p => p.id === $('provider').value);
 const active = v => Object.fromEntries(Object.entries(v || {}).filter(([, s]) => !s.disabled));
@@ -43,7 +43,7 @@ function list() {
     const button = document.createElement('button'); button.type = 'button'; button.className = 'model';
     button.classList.toggle('selected', !adding && current?.id === model.id);
     button.textContent = model.name;
-    const sub = document.createElement('small'); sub.textContent = model.id + ' · ' + (Object.keys(active(model.variants)).join(' / ') || '未配置档位'); button.append(sub);
+    const sub = document.createElement('small'); sub.textContent = model.id + ' · ' + (Object.keys(active(model.variants)).join(' / ') || '使用模型默认设置'); button.append(sub);
     button.addEventListener('click', () => { if (!pending && discard()) show(model, false); }); $('list').append(button);
   }
 }
@@ -67,8 +67,7 @@ for (const name of levels) {
 $('form').addEventListener('input', event => { if (event.target.id.startsWith('level-')) return; dirty = true; preview(); });
 $('form').addEventListener('submit', e => { e.preventDefault(); try { send({type: 'save', revision, command: command()}); } catch (error) { status(error.message, true); } });
 $('delete').addEventListener('click', () => { if (current) send({type: 'save', revision, command: {action: 'delete', provider: $('provider').value, id: current.id}}); });
-$('toggle').addEventListener('click', () => { $('variants').value = JSON.stringify({on: {reasoningEffort: 'high'}, off: {reasoningEffort: 'none'}}, null, 2); dirty = true; preview(); });
-$('clear').addEventListener('click', () => { $('variants').value = '{}'; dirty = true; preview(); });
+$('defaults').addEventListener('click', () => { $('variants').value = '{}'; dirty = true; preview(); });
 $('add').addEventListener('click', () => { if (provider() && discard()) show(null, true); });
 let providerId = '';
 $('provider').addEventListener('change', () => { if (!discard()) { $('provider').value = providerId; return; } providerId = $('provider').value; show(null, false); });

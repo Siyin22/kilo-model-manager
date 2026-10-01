@@ -45,7 +45,7 @@ function activate(context) {
           if (cmd.action === 'delete') {
             if (await vscode.window.showWarningMessage(`删除模型 ${cmd.id}？当前配置会先备份。`, {modal: true}, '删除') !== '删除') return;
           } else {
-            const selected = Object.entries(cmd.variants).filter(([, v]) => !v.disabled).map(([k]) => k).join(' / ') || '无显式档位';
+            const selected = Object.entries(cmd.variants).filter(([, v]) => !v.disabled).map(([k]) => k).join(' / ') || '使用模型默认设置';
             if (await vscode.window.showInformationMessage(`保存 ${cmd.id}？`, {modal: true, detail: `提供商：${cmd.provider}\n显示名称：${cmd.name}\n推理：${cmd.reasoning ? '是' : '否'}；图片：${cmd.images ? '是' : '否'}\n档位：${selected}\n具体请求参数请核对页面预览。保存前自动备份。`}, '保存') !== '保存') return;
           }
           const backup = config.commit(file, snapshot.hash, next);
@@ -86,10 +86,10 @@ function html(webview, uri) {
   <div class="layout"><aside><label for="provider">提供商</label><select id="provider"></select><label for="search">查找模型</label><input id="search" placeholder="输入 ID 或名称"><button id="add">＋ 添加模型</button><div id="list"></div></aside>
   <main><div id="empty">请选择模型，或添加新模型。请先在 Kilo 中配置提供商和 API 凭据。</div>
   <form id="form" hidden><h2 id="heading">编辑模型</h2><div class="grid"><label>模型 ID<input id="modelId" required maxlength="300"></label><label>显示名称<input id="modelName" required></label></div>
-  <div class="checks"><label><input type="checkbox" id="reasoning">支持推理</label><label><input type="checkbox" id="images">支持图片</label></div>
+  <div class="checks"><label><input type="checkbox" id="reasoning">模型具备推理能力</label><label><input type="checkbox" id="images">支持图片</label></div>
   <section><h3>推理档位</h3><p class="muted">根据上游文档选择。此处设置客户端参数，不代表已验证模型支持。</p><div id="levels" class="checks"></div>
-  <div class="actions"><button type="button" id="toggle" class="secondary">思考开关模板</button><button type="button" id="clear" class="secondary">清空选项</button></div>
-  <p class="hint">开关模板使用 on → high、off → none；AxonHub 的 OpenAI 兼容渠道未必会将它转换为原生思考开关。</p>
+  <div class="actions"><button type="button" id="defaults" class="secondary">使用模型默认设置</button></div>
+  <p class="hint">默认设置会禁用已配置的档位，不通过档位附加推理控制参数；是否思考由模型和上游决定。“模型具备推理能力”仅声明能力，不是思考开关。已有提供商或模型 options 参数不在此处清除。</p>
   <label for="variants">自定义选项和请求参数（JSON）</label><textarea id="variants" rows="12" spellcheck="false"></textarea><p class="muted">例如 {"low":{"reasoningEffort":"low"}}。也可使用自定义名称和 thinking 等参数。未保留的常见档位及原有档位会被禁用。</p></section>
   <section><h3>修改预览</h3><pre id="preview"></pre></section><div class="actions"><button type="submit" id="save">确认并保存</button><button type="button" id="delete" class="danger">删除模型</button></div></form></main></div>
   <script nonce="${nonce}" src="${js}"></script></body></html>`;

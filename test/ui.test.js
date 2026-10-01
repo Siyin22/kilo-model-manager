@@ -18,7 +18,7 @@ function setup() {
   send(data);send({type:'done'});
   return {dom,messages,send,data,$:id=>dom.window.document.getElementById(id)};
 }
-test('actual page adds a model, creates toggle parameters, sends plain data and handles cancellation/error',()=>{
+test('actual page adds a model, uses defaults without reasoning overrides, sends plain data and handles cancellation/error',()=>{
   const {dom,messages,send,$}=setup();
   try {
     $('add').click(); $('modelId').value='grok-4.7';$('modelName').value='Grok 4.7';
@@ -27,12 +27,14 @@ test('actual page adds a model, creates toggle parameters, sends plain data and 
     assert.deepEqual(JSON.parse($('variants').value),{high:{reasoningEffort:'high'}});
     $('level-high').click();
     assert.deepEqual(JSON.parse($('variants').value),{});
-    $('toggle').click();
+    assert.equal($('level-none'),null);
+    $('defaults').click();
     assert.match($('preview').textContent,/grok-4.7/);
     $('form').dispatchEvent(new dom.window.Event('submit',{cancelable:true}));
     const request=messages.at(-1);
     assert.equal(request.type,'save');assert.equal(request.command.action,'add');
-    assert.deepEqual(request.command.variants,{on:{reasoningEffort:'high'},off:{reasoningEffort:'none'}});
+    assert.deepEqual(request.command.variants,{});
+    assert.equal(request.command.reasoning,true);
     assert.equal($('save').disabled,true);
     send({type:'error',text:'配置冲突'});send({type:'done'});
     assert.equal($('save').disabled,false);assert.equal($('status').textContent,'配置冲突');

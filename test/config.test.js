@@ -7,6 +7,18 @@ const path = require('node:path');
 const c = require('../config');
 const source = '\uFEFF{\r\n  // keep provider comment\r\n  "provider": {"local": {"options":{"apiKey":"DO-NOT-EXPOSE"}, "models": {"old": {"name":"Old","reasoning":true,"modalities":{"input":["text","image","audio"],"output":["text"]},"limit":{"context":123},"variants":{"custom":{"budget":19}}}}}},\r\n  "unknown": {"value":42},\r\n}\r\n';
 const cmd = {action:'edit', provider:'local', id:'old', name:'Edited', reasoning:true, images:false, variants:{low:{reasoningEffort:'low'}}};
+test('defaults disable old switches and all known variants without changing reasoning capability or model options', () => {
+  const data = c.parse(source);
+  const model = data.provider.local.models.old;
+  model.variants = {on:{reasoningEffort:'high'},off:{reasoningEffort:'none'},custom:{thinking:{type:'enabled'}}};
+  model.options = {temperature:0.8};
+  const result = c.parse(c.update(JSON.stringify(data), {...cmd,variants:{}})).provider.local.models.old;
+  assert.ok(Object.values(result.variants).every(v => v.disabled === true));
+  assert.equal(result.reasoning,true);
+  assert.deepEqual(result.options,{temperature:0.8});
+  assert.equal(result.variants.on.disabled,true);
+  assert.equal(result.variants.off.disabled,true);
+});
 test('edit preserves unrelated settings, comments, BOM, newline, modalities and unknown fields', () => {
   const text = c.update(source, cmd), result = c.parse(text);
   assert.ok(text.startsWith('\uFEFF')); assert.ok(text.includes('// keep provider comment'));
