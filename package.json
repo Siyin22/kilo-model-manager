@@ -2,7 +2,7 @@
   "name": "kilo-model-manager-local",
   "displayName": "Kilo模型工具箱",
   "description": "统一管理 Kilo 模型、推理档位、模型分组和原生保存修复，支持备份与恢复。",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "publisher": "local-tools",
   "engines": {
     "vscode": "^1.90.0"
@@ -24,19 +24,19 @@
       },
       {
         "command": "kiloPicker.settings",
-        "title": "Kilo 模型分组：打开设置"
+        "title": "Kilo模型分组：打开设置"
       },
       {
         "command": "kiloPicker.apply",
-        "title": "Kilo 模型分组：应用补丁"
+        "title": "Kilo模型分组：应用补丁"
       },
       {
         "command": "kiloPicker.restore",
-        "title": "Kilo 模型分组：恢复原版并关闭自动应用"
+        "title": "Kilo模型分组：恢复原版并关闭自动应用"
       },
       {
         "command": "kiloPicker.status",
-        "title": "Kilo 模型分组：查看状态"
+        "title": "Kilo模型分组：查看状态"
       }
     ],
     "configuration": {
@@ -89,7 +89,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Siyin22/kilo-model-manager.git"
+    "url": "https://github.com/Siyin22/kilo-model-toolbox.git"
   },
   "extensionKind": [
     "ui"
