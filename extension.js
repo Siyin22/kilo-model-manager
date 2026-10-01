@@ -7,6 +7,7 @@ const crypto = require('node:crypto');
 const config = require('./config');
 
 function activate(context) {
+  require('./picker').activate(context);
   let panel;
   context.subscriptions.push(vscode.commands.registerCommand('kiloModelManager.open', () => {
     if (panel) { panel.reveal(); return; }
@@ -36,6 +37,7 @@ function activate(context) {
       busy = true;
       try {
         if (message.type === 'ready' || message.type === 'refresh') refresh();
+        else if (message.type === 'pickerSettings') await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:local-tools.kilo-model-manager-local');
         else if (message.type === 'save') {
           if (!snapshot || message.revision !== snapshot.hash) throw new Error('页面版本已过期，请刷新。');
           const current = config.read(file);
@@ -81,7 +83,7 @@ function html(webview, uri) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
   <link rel="stylesheet" href="${css}"><title>Kilo 模型与推理设置</title></head><body>
-  <header><div><h1>Kilo 模型与推理设置</h1><p>在一个页面管理自定义模型及推理选项</p></div><div class="actions"><button id="refresh" class="secondary">刷新</button><button id="restore" class="secondary">恢复备份</button><button id="reload" class="secondary">重新加载窗口</button></div></header>
+  <header><div><h1>Kilo 模型工具箱</h1><p>管理自定义模型、推理选项与模型分组</p></div><div class="actions"><button id="pickerSettings" class="secondary">分组与保存修复</button><button id="refresh" class="secondary">刷新</button><button id="restore" class="secondary">恢复配置备份</button><button id="reload" class="secondary">重新加载窗口</button></div></header>
   <p id="file" class="muted"></p><div id="status" role="status" aria-live="polite">正在读取配置…</div>
   <div class="layout"><aside><label for="provider">提供商</label><select id="provider"></select><label for="search">查找模型</label><input id="search" placeholder="输入 ID 或名称"><button id="add">＋ 添加模型</button><div id="list"></div></aside>
   <main><div id="empty">请选择模型，或添加新模型。请先在 Kilo 中配置提供商和 API 凭据。</div>

@@ -11,6 +11,7 @@ function busy(value) {
   for (const el of document.querySelectorAll('button,input,select,textarea')) el.disabled = value;
 }
 function send(message) { busy(true); vscode.postMessage(message); }
+$('pickerSettings').addEventListener('click', () => send({type: 'pickerSettings'}));
 function discard() { if (dirty) { status('有未保存修改。请保存，或点击“清空未保存修改”后再切换。', true); return false; } return true; }
 // Webviews do not reliably support window.confirm. Explicit discard button instead.
 const discardButton = document.createElement('button');

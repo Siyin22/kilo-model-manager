@@ -1,8 +1,8 @@
 {
   "name": "kilo-model-manager-local",
-  "displayName": "Kilo 模型与推理设置",
-  "description": "独立管理 Kilo 自定义模型、图片能力及推理档位，支持预览、备份和恢复。",
-  "version": "0.1.3",
+  "displayName": "Kilo 模型工具箱",
+  "description": "统一管理 Kilo 模型、推理档位、模型分组和原生保存修复，支持备份与恢复。",
+  "version": "0.2.0",
   "publisher": "local-tools",
   "engines": {
     "vscode": "^1.90.0"
@@ -12,6 +12,7 @@
   ],
   "main": "./extension.js",
   "activationEvents": [
+    "onStartupFinished",
     "onCommand:kiloModelManager.open"
   ],
   "contributes": {
@@ -20,16 +21,56 @@
         "command": "kiloModelManager.open",
         "title": "Kilo 模型与推理设置",
         "icon": "$(settings-gear)"
+      },
+      {
+        "command": "kiloPicker.settings",
+        "title": "Kilo 模型分组：打开设置"
+      },
+      {
+        "command": "kiloPicker.apply",
+        "title": "Kilo 模型分组：应用补丁"
+      },
+      {
+        "command": "kiloPicker.restore",
+        "title": "Kilo 模型分组：恢复原版并关闭自动应用"
+      },
+      {
+        "command": "kiloPicker.status",
+        "title": "Kilo 模型分组：查看状态"
       }
     ],
     "configuration": {
-      "title": "Kilo 模型与推理设置",
+      "title": "Kilo 模型工具箱",
       "properties": {
         "kiloModelManager.configPath": {
           "type": "string",
           "default": "",
           "scope": "machine",
           "description": "Kilo 全局 JSON/JSONC 配置绝对路径。留空时检测 ~/.config/kilo/kilo.jsonc 或 kilo.json。"
+        },
+        "kiloPicker.hideGateway": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "隐藏所有 Kilo Gateway 模型，包括自动、推荐、收藏和搜索中的对应模型。"
+        },
+        "kiloPicker.disableMostUsed": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "取消最常用分组，常用模型保留在原提供商分组。"
+        },
+        "kiloPicker.fixNativeSave": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "修复 Kilo 7.8.1 编辑已有推理档位时卡在保存中的问题，保留全部模型配置。"
+        },
+        "kiloPicker.autoApply": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "description": "启动、设置变化或 Kilo 更新时自动应用。仅修改已适配版本；修改后需重新加载窗口。"
         }
       }
     }
@@ -45,5 +86,12 @@
     "@vscode/vsce": "^3.6.2",
     "jsdom": "^29.1.1"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Siyin22/kilo-model-manager.git"
+  },
+  "extensionKind": [
+    "ui"
+  ]
 }

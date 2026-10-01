@@ -45,6 +45,18 @@ test('actual page adds a model, uses defaults without reasoning overrides, sends
     assert.equal(messages.length,count);assert.equal($('save').disabled,false);
   }finally{dom.window.close();}
 });
+
+test('toolbox opens grouping settings without discarding unsaved model edits', () => {
+  const {dom,messages,send,$}=setup();
+  try {
+    $('add').click(); $('modelId').value='unsaved'; $('modelName').value='Unsaved';
+    $('pickerSettings').click();
+    assert.deepEqual(messages.at(-1), {type:'pickerSettings'});
+    send({type:'done'});
+    assert.equal($('modelId').value,'unsaved');
+    assert.equal($('pickerSettings').disabled,false);
+  } finally { dom.window.close(); }
+});
 test('existing model ID read-only; custom settings survive UI; successful refresh selects added model',()=>{
   const {dom,messages,send,data,$}=setup();
   try{
