@@ -12,9 +12,11 @@ const names = ['webview.js', 'agent-manager.js'];
 const signatures = require('../signatures.json')[version];
 const originals = {};
 if (fs.existsSync(real)) for (const name of names) {
-  const candidates = [name, ...fs.readdirSync(real).filter(n => n.startsWith(name + '.bak-model-picker-'))];
+  const storage = path.join(process.env.APPDATA || '', 'Code/User/globalStorage/local-tools.kilo-model-manager-local');
+  const backup = path.join(storage, patcher.hash(path.resolve(real, '..').toLowerCase()).slice(0, 24), name);
+  const candidates = [backup, name, ...fs.readdirSync(real).filter(n => n.startsWith(name + '.bak-model-picker-'))];
   for (const candidate of candidates) {
-    const file = path.join(real, candidate);
+    const file = path.isAbsolute(candidate) ? candidate : path.join(real, candidate);
     if (!fs.existsSync(file)) continue;
     const source = fs.readFileSync(file, 'utf8');
     if (patcher.hash(source) === signatures[name]) { originals[name] = source; break; }
@@ -196,12 +198,10 @@ test('other provider actions keep their original transport and callback behavior
     fixed.actions.dispose();
   }
 });
-test('unknown version and foreign edits do not write either bundle', () => fixture((extension, storage) => {
+test('foreign edits to verified versions do not write either bundle', () => fixture((extension, storage) => {
   fs.appendFileSync(path.join(extension, 'dist', names[1]), '// foreign change');
   assert.throws(() => patcher.apply(extension, storage, {hideGateway: true}), /原版|修改/);
   assert.equal(fs.readFileSync(path.join(extension, 'dist', names[0]), 'utf8'), originals[names[0]]);
-  fs.writeFileSync(path.join(extension, 'package.json'), '{"version":"7.9.0"}');
-  assert.throws(() => patcher.apply(extension, storage, {}), /尚未适配/);
 }));
 test('gateway filtering executes correctly for normal and explicit model lists', () => {
   for (const source of Object.values(originals)) {
@@ -229,4 +229,15 @@ test('failed second write rolls back first and preserves backups', () => fixture
   finally { fs.writeFileSync = write; }
   for (const name of names) assert.equal(fs.readFileSync(path.join(extension, 'dist', name), 'utf8'), originals[name]);
   assert.equal(fs.existsSync(path.join(storage, 'patch.lock')), false);
+}));
+
+test('unlisted version with real bundles applies, persists baseline and restores exactly', () => fixture((extension, storage) => {
+  fs.writeFileSync(path.join(extension, 'package.json'), '{"version":"99.0.0"}');
+  const options = {hideGateway: true, disableMostUsed: true, fixNativeSave: true};
+  const result = patcher.apply(extension, storage, options);
+  assert.equal(result.compatibility, 'structural');
+  assert.equal(result.changed, true);
+  assert.equal(patcher.apply(extension, storage, options).changed, false);
+  patcher.apply(extension, storage, {});
+  for (const name of names) assert.equal(fs.readFileSync(path.join(extension, 'dist', name), 'utf8'), originals[name]);
 }));

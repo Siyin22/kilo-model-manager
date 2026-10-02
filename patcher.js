@@ -26,6 +26,7 @@ function fixNativeSave(source, legacy = false) {
   return result;
 }
 function transform(source, options) {
+  if (source.split('="most-used"').length !== 2) throw Error('模型选择器结构不兼容：无法唯一定位。');
   const start = source.indexOf('="most-used"');
   const label = source.indexOf('model.group.mostUsed', start);
   const end = source.indexOf('function ', label);
@@ -56,22 +57,53 @@ function* variants(original) {
 }
 function inspect(extension, storage) {
   const version = JSON.parse(fs.readFileSync(path.join(extension, 'package.json'), 'utf8')).version;
-  if (!signatures[version]) throw Error(`Kilo ${version} 尚未适配，未修改文件。`);
-  const directory = path.join(storage, hash(path.resolve(extension).toLowerCase()).slice(0, 24));
+  if (typeof version !== 'string' || !/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(version)) throw Error('Kilo 版本信息无效，未修改文件。');
+  const verified = Object.hasOwn(signatures, version);
+  const identity = path.resolve(extension).toLowerCase();
+  // Keep existing verified backups in place. Unlisted versions get separate
+  // baselines even when an updater reuses the same installation directory.
+  const directory = path.join(storage, hash(verified ? identity : `${identity}\n${version}`).slice(0, 24));
+  const receiptPath = path.join(directory, 'baseline.json');
+  let receipt;
+  if (!verified && fs.existsSync(receiptPath)) {
+    try { receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8')); }
+    catch { throw Error('结构适配备份记录损坏，未修改文件。'); }
+    if (receipt?.schema !== 1 || receipt.version !== version || receipt.extension !== identity ||
+        !files.every(name => /^[a-f0-9]{64}$/.test(receipt.hashes?.[name]))) {
+      throw Error('结构适配备份记录不匹配，未修改文件。');
+    }
+  }
   const result = files.map(name => {
     const target = path.join(extension, 'dist', name);
     const current = fs.readFileSync(target, 'utf8');
     const backup = path.join(directory, name);
     let original;
-    // Both extensions use VS Code globalStorage siblings. Only hash-verified
-    // originals can be adopted; apply writes them into this extension's storage.
-    const legacyBackup = path.join(path.dirname(storage), 'local-tools.kilo-picker-helper', path.basename(directory), name);
-    const candidates = [backup, legacyBackup, target, ...fs.readdirSync(path.dirname(target))
-      .filter(n => n.startsWith(name + '.bak-model-picker-')).map(n => path.join(path.dirname(target), n))];
-    for (const candidate of candidates) {
-      if (!fs.existsSync(candidate)) continue;
-      const data = fs.readFileSync(candidate, 'utf8');
-      if (hash(data) === signatures[version][name]) { original = data; break; }
+    if (!verified) {
+      if (receipt) {
+        if (!fs.existsSync(backup)) throw Error(`${name} 缺少结构适配备份，未修改。`);
+        original = fs.readFileSync(backup, 'utf8');
+        if (hash(original) !== receipt.hashes[name]) throw Error(`${name} 备份校验失败，未修改。`);
+      } else {
+        if (fs.existsSync(backup)) throw Error('结构适配备份记录缺失，未修改文件。');
+        original = current;
+      }
+      // A first-seen file is only a structural baseline, not an authenticated
+      // upstream original. Never adopt one of our patched files as a baseline.
+      if (original.includes('/* local:')) throw Error(`${name} 已有补丁但缺少可验证的原版，未修改。`);
+      try { transform(original, {hideGateway: true, disableMostUsed: true, fixNativeSave: true}); }
+      catch (error) { throw Error(`Kilo ${version} 的 ${name} 结构检查未通过：${error.message} 未修改文件。`); }
+    } else {
+      // Both extensions use VS Code globalStorage siblings. Only hash-verified
+      // originals can be adopted; apply writes them into this extension's storage.
+      const legacyBackup = path.join(path.dirname(storage), 'local-tools.kilo-picker-helper', path.basename(directory), name);
+      const structuralBackup = path.join(storage, hash(`${identity}\n${version}`).slice(0, 24), name);
+      const candidates = [backup, legacyBackup, structuralBackup, target, ...fs.readdirSync(path.dirname(target))
+        .filter(n => n.startsWith(name + '.bak-model-picker-')).map(n => path.join(path.dirname(target), n))];
+      for (const candidate of candidates) {
+        if (!fs.existsSync(candidate)) continue;
+        const data = fs.readFileSync(candidate, 'utf8');
+        if (hash(data) === signatures[version][name]) { original = data; break; }
+      }
     }
     if (!original) throw Error(`${name} 找不到经过验证的原版文件，未修改。`);
     let known;
@@ -79,7 +111,9 @@ function inspect(extension, storage) {
     if (!known) throw Error(`${name} 含有其他修改，已停止以避免覆盖。`);
     return {name, target, backup, current, original, options: known.options};
   });
-  return {version, directory, files: result};
+  return {version, directory, files: result, compatibility: verified ? 'verified' : 'structural',
+    receiptPath, receipt: !verified && !receipt ? {schema: 1, version, extension: identity,
+      hashes: Object.fromEntries(result.map(file => [file.name, hash(file.original)]))} : undefined};
 }
 function apply(extension, storage, options) {
   fs.mkdirSync(storage, {recursive: true});
@@ -96,6 +130,10 @@ function apply(extension, storage, options) {
       if (!fs.existsSync(file.backup)) fs.writeFileSync(file.backup, file.original, {flag: 'wx'});
       else if (hash(fs.readFileSync(file.backup)) !== hash(file.original)) throw Error('备份校验失败。');
     }
+    // Persist both baseline hashes before touching either installed bundle.
+    if (state.receipt) {
+      fs.writeFileSync(state.receiptPath, JSON.stringify(state.receipt, null, 2) + '\n', {flag: 'wx'});
+    }
     for (const file of plans) {
       if (fs.readFileSync(file.target, 'utf8') !== file.current) throw Error('Kilo 文件在检查期间发生变化，请重试。');
       if (file.current === file.next) continue;
@@ -103,7 +141,7 @@ function apply(extension, storage, options) {
       fs.writeFileSync(file.target, file.next);
       if (fs.readFileSync(file.target, 'utf8') !== file.next) throw Error('写入校验失败。');
     }
-    return {changed: written.length > 0, version: state.version};
+    return {changed: written.length > 0, version: state.version, compatibility: state.compatibility};
   } catch (error) {
     for (const file of written.reverse()) fs.writeFileSync(file.target, file.current);
     throw error;

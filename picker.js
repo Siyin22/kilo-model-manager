@@ -31,6 +31,7 @@ function activate(context) {
       });
       const message = `${restore ? '已恢复原版' : '已应用分组与保存修复设置'}（Kilo ${result.version}）`;
       output.appendLine(new Date().toISOString() + ' ' + message);
+      if (result.compatibility === 'structural') output.appendLine('兼容性：结构检查通过（未收录版本），已保存本地基线备份。');
       if (result.changed) {
         vscode.window.showInformationMessage(message + '，重新加载窗口后生效。', '重新加载窗口')
           .then(choice => { if (choice) return vscode.commands.executeCommand('workbench.action.reloadWindow'); });
@@ -52,7 +53,7 @@ function activate(context) {
     output.appendLine(`备份目录：${storage}\n自动应用：${config().get('autoApply')}`);
     try {
       const state = patcher.inspect(target(), storage);
-      output.appendLine(`Kilo ${state.version}：${target()}`);
+      output.appendLine(`Kilo ${state.version}：${target()}\n兼容性：${state.compatibility === 'structural' ? '结构检查通过（未收录版本）' : '已收录文件校验通过'}`);
       for (const file of state.files) output.appendLine(`${file.name}：隐藏 Gateway=${file.options.hideGateway}，禁用最常用=${file.options.disableMostUsed}，修复原生保存=${file.options.fixNativeSave}`);
     } catch (error) { output.appendLine(error.message); }
     output.show();
