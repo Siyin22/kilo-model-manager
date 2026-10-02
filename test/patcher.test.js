@@ -6,9 +6,10 @@ const path = require('node:path');
 const vm = require('node:vm');
 const {randomUUID} = require('node:crypto');
 const patcher = require('../patcher');
-const real = process.env.KILO_TEST_DIST || path.join(os.homedir(), '.vscode/extensions/kilocode.kilo-code-7.8.1-win32-x64/dist');
+const version = process.env.KILO_TEST_VERSION || '7.8.3';
+const real = process.env.KILO_TEST_DIST || path.join(os.homedir(), `.vscode/extensions/kilocode.kilo-code-${version}-win32-x64/dist`);
 const names = ['webview.js', 'agent-manager.js'];
-const signatures = require('../signatures.json')['7.8.1'];
+const signatures = require('../signatures.json')[version];
 const originals = {};
 if (fs.existsSync(real)) for (const name of names) {
   const candidates = [name, ...fs.readdirSync(real).filter(n => n.startsWith(name + '.bak-model-picker-'))];
@@ -20,7 +21,7 @@ if (fs.existsSync(real)) for (const name of names) {
   }
 }
 const available = names.every(name => originals[name]);
-const test = (name, fn) => nodeTest(name, {skip: available ? false : 'Set KILO_TEST_DIST to verified Kilo 7.8.1 original dist files.'}, fn);
+const test = (name, fn) => nodeTest(name, {skip: available ? false : `Set KILO_TEST_DIST to verified Kilo ${version} original dist files.`}, fn);
 nodeTest('unsupported selector fails without executing its code', () => {
   assert.throws(() => patcher.transform('throw Error("must not run");', {}), /结构不兼容/);
 });
@@ -29,7 +30,7 @@ function fixture(fn) {
   const extension = path.join(temporary, 'extension');
   const storage = path.join(temporary, 'storage');
   fs.mkdirSync(path.join(extension, 'dist'), {recursive: true});
-  fs.writeFileSync(path.join(extension, 'package.json'), JSON.stringify({version: '7.8.1'}));
+  fs.writeFileSync(path.join(extension, 'package.json'), JSON.stringify({version}));
   for (const name of names) fs.writeFileSync(path.join(extension, 'dist', name), originals[name]);
   try { fn(extension, storage); } finally { fs.rmSync(temporary, {recursive: true, force: true}); }
 }

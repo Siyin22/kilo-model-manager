@@ -2,7 +2,7 @@
   "name": "kilo-model-manager-local",
   "displayName": "Kilo模型工具箱",
   "description": "统一管理 Kilo 模型、推理档位、模型分组和原生保存修复，支持备份与恢复。",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "publisher": "local-tools",
   "engines": {
     "vscode": "^1.90.0"
@@ -64,7 +64,7 @@
           "type": "boolean",
           "default": true,
           "scope": "application",
-          "description": "修复 Kilo 7.8.1 原生模型保存，并在没有推理档位时保留原生“默认”选项。"
+          "description": "修复 Kilo 7.8.1 / 7.8.3 原生模型保存，并在没有推理档位时保留原生“默认”选项。"
         },
         "kiloPicker.autoApply": {
           "type": "boolean",

@@ -2,5 +2,9 @@
   "7.8.1": {
     "webview.js": "040385749a1fb5f9c3714b3b3ef3305f760b83ea15fe5bf0fa2d6df1206f2c2a",
     "agent-manager.js": "13b0923dd6ef84c2a736380723f62404e7c2e9c1e852b716f7c95b4acea4986d"
+  },
+  "7.8.3": {
+    "webview.js": "58e6a353d568df344bdeb84dd69a1ab3d29a356d08ca17150131bc98f42ffae7",
+    "agent-manager.js": "3ee392c7083667db72960cf6d43c86383d637d3224745c919933241abb6713d6"
   }
 }
